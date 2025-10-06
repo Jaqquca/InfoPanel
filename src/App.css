@@ -1,0 +1,492 @@
+/* Základní layout pro 9:16 obrazovku */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #333;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  filter: blur(4px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Poměry: top nejmenší, bottom střední, middle největší */
+.top {
+  padding: 20px 24px;
+  flex: 0 0 auto;
+  background: #DE401A;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  border-radius: 16px;
+  margin: 16px;
+  width: calc(100% - 32px);
+  box-sizing: border-box;
+}
+
+.middle {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  position: relative;
+  z-index: 1;
+}
+
+.middle.has-background {
+  background: transparent;
+}
+.bottom {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  background: #e5e7eb;
+  border-top: 1px solid #eee;
+  position: relative;
+  z-index: 1;
+  border-radius: 16px;
+  margin: 16px;
+  width: calc(100% - 32px);
+  box-sizing: border-box;
+}
+
+.bottom.has-background {
+  background: transparent;
+}
+
+/* Horní část */
+.room-name {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  letter-spacing: -0.5px;
+}
+.room-meta {
+  margin: 8px 0 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  margin-left: 20px;
+  font-weight: 500;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Semafor */
+.light {
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 10px #00000010, inset 0 0 60px #00000033;
+  transition: background-color 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Breathing effect for color transitions */
+.light.color-transitioning {
+  animation: colorBreathing 1s ease-in-out;
+}
+
+@keyframes colorBreathing {
+  0% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 10px #00000010, inset 0 0 60px #00000033;
+  }
+  50% { 
+    transform: scale(0.05);
+    box-shadow: 0 0 0 1px #00000010, inset 0 0 3px #00000033;
+  }
+  100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 10px #00000010, inset 0 0 60px #00000033;
+  }
+}
+
+.light::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 50%;
+  border: 12px dashed;
+  z-index: 1;
+}
+
+.light.green::before {
+  border-color: rgba(0, 0, 0, 0.6);
+  animation: spin 16s linear infinite;
+}
+
+.light.red::before {
+  border-color: rgba(255, 255, 255, 0.7);
+  animation: none;
+}
+
+.light.orange::before {
+  border-color: rgba(0, 0, 0, 0.6);
+  animation: spin 32s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.green { background: #0f0; }
+.red { background: #f00; }
+.orange { background: #ff8c00; }
+
+/* Spodní panel / slidy */
+.slides { 
+  display: block; 
+  position: relative;
+  overflow: hidden;
+}
+.slide-container {
+  /* Remove transition from container to keep glass effect intact */
+}
+
+.slide-container.transitioning .slide-content {
+  opacity: 0;
+  transform: translateX(-20px) scale(0.98);
+  transition: all 1.5s ease-in-out;
+}
+
+.slide-content {
+  transition: all 1.5s ease-in-out;
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+.slide {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 140px;
+  position: relative;
+}
+
+/* Glass effect for slides */
+.slide.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+.slide-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 100%;
+}
+.slide-text {
+  flex: 1;
+}
+.slide h3 { 
+  margin-top: 0; 
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #333;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  letter-spacing: -0.3px;
+}
+.slide p {
+  font-size: 1.2rem;
+  color: #555;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  margin: 8px 0 0 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.qr { 
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.qr-placeholder {
+  display: inline-block;
+  width: 120px;
+  height: 120px;
+  border: 2px dashed #999;
+  border-radius: 6px;
+  line-height: 120px;
+  text-align: center;
+  color: #777;
+}
+
+/* Admin placeholder */
+.admin {
+  max-width: 640px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+/* Status indicator in admin */
+.status-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.status-indicator.green { background: #0f0; }
+.status-indicator.red { background: #f00; }
+.status-indicator.orange { background: #ff8c00; }
+
+/* Admin forms */
+.admin-form {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.admin-form h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.2px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: #555;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 0.9rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 400;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Status radio buttons */
+.status-group {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.status-group label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.status-group input[type="radio"] {
+  margin-right: 8px;
+  width: auto;
+}
+
+.status-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+}
+
+.status-dot.green { background: #0f0; }
+.status-dot.red { background: #f00; }
+.status-dot.orange { background: #ff8c00; }
+
+/* Slide forms */
+.slide-form {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.slide-form h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #333;
+  font-size: 14px;
+}
+
+.slide-form .form-group {
+  margin-bottom: 8px;
+}
+
+.slide-form input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.remove-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.remove-btn:hover {
+  background: #c82333;
+}
+
+.add-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.add-btn:hover {
+  background: #218838;
+}
+
+/* Background image management */
+.file-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+}
+
+.background-preview {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.preview-image {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 4px;
+  margin: 8px 0;
+  display: block;
+}
+
+.remove-bg-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.remove-bg-btn:hover {
+  background: #c82333;
+}
+
+/* Time-based background management */
+.time-slot-form {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.time-slot-form h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #333;
+  font-size: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.time-slot-preview {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.time-slot-preview p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #666;
+}

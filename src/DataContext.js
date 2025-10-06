@@ -1,0 +1,22 @@
+import React from 'react'
+
+export const DataContext = React.createContext()
+
+export const defaultData = {
+  roomName: "Ukázková místnost",
+  personName: "Jan Novák",
+  roomType: "IT učebna",
+  status: "orange",
+  backgroundImage: "",
+  backgroundColor: "#e5e7eb",
+  timeBasedBackgrounds: [
+    { startTime: "07:00", endTime: "11:00", image: "", label: "Morning" },
+    { startTime: "11:00", endTime: "15:00", image: "", label: "Afternoon" },
+    { startTime: "15:00", endTime: "19:00", image: "", label: "Evening" },
+    { startTime: "19:00", endTime: "07:00", image: "", label: "Night" }
+  ],
+  slides: [
+    { title: "Ukázkový článek", description: "Stručný popis ukázkového článku...", url: "https://sharepoint.example.com/a", backgroundImage: "" },
+    { title: "Druhý článek", description: "Krátký popis...", url: "https://sharepoint.example.com/b", backgroundImage: "" }
+  ]
+}
