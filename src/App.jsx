@@ -100,30 +100,48 @@ export default function App() {
     return () => controller.abort()
   }, [data, isApiReady])
 
-  // Pravidelné dotazování API pro změny z jiných zařízení
+  // WebSocket connection for real-time updates
   useEffect(() => {
     if (!isApiReady) return
-    let cancelled = false
-    const interval = setInterval(async () => {
+    
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const wsUrl = `${protocol}//${window.location.host}`
+    const ws = new WebSocket(wsUrl)
+    
+    ws.onopen = () => {
+      console.log('WebSocket connected for real-time updates')
+    }
+    
+    ws.onmessage = (event) => {
       try {
-        const res = await fetch('/api/data', { cache: 'no-store' })
-        if (!res.ok) return
-        const payload = await res.json()
-        if (cancelled) return
-        if (payload && payload.data) {
-          const localStr = JSON.stringify(data)
-          const remoteStr = JSON.stringify(payload.data)
-          if (localStr !== remoteStr) {
-            isApplyingRemoteUpdate.current = true
-            setData(payload.data)
-          }
+        const message = JSON.parse(event.data)
+        if (message.type === 'dataUpdate' && message.data) {
+          isApplyingRemoteUpdate.current = true
+          setData(message.data)
         }
       } catch (e) {
-        // silently ignore during polling
+        console.warn('Invalid WebSocket message:', e)
       }
-    }, 5000) // 5s
-    return () => { cancelled = true; clearInterval(interval) }
-  }, [data, isApiReady])
+    }
+    
+    ws.onclose = () => {
+      console.log('WebSocket disconnected, attempting reconnect in 3s...')
+      setTimeout(() => {
+        if (isApiReady) {
+          // Trigger reconnection by re-running this effect
+          setData(prev => ({ ...prev }))
+        }
+      }, 3000)
+    }
+    
+    ws.onerror = (error) => {
+      console.warn('WebSocket error:', error)
+    }
+    
+    return () => {
+      ws.close()
+    }
+  }, [isApiReady])
 
   // Naslouchej změnám v localStorage pro real-time aktualizace mezi záložkami
   useEffect(() => {
