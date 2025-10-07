@@ -5,16 +5,8 @@ import DisplayPage from './pages/DisplayPage.jsx'
 import AdminPage from './pages/AdminPage.jsx'
 
 export default function App() {
-  // Načti z localStorage, pokud existuje
-  const [data, setData] = useState(() => {
-    try {
-      const saved = localStorage.getItem("roomPanelData")
-      return saved ? JSON.parse(saved) : defaultData
-    } catch (error) {
-      console.warn("Chyba při načítání z localStorage:", error)
-      return defaultData
-    }
-  })
+  // Start with default data, will be replaced by API or localStorage
+  const [data, setData] = useState(defaultData)
   const isApplyingRemoteUpdate = useRef(false)
   const [isApiReady, setIsApiReady] = useState(false)
 
@@ -64,7 +56,18 @@ export default function App() {
         }
         setIsApiReady(true)
       } catch (e) {
-        console.warn('API not reachable, working from localStorage only.', e)
+        console.warn('API not reachable, falling back to localStorage.', e)
+        // Fallback to localStorage if API fails
+        try {
+          const saved = localStorage.getItem("roomPanelData")
+          if (saved) {
+            const localData = JSON.parse(saved)
+            isApplyingRemoteUpdate.current = true
+            setData(localData)
+          }
+        } catch (localError) {
+          console.warn("Chyba při načítání z localStorage:", localError)
+        }
         setIsApiReady(false)
       }
     }
