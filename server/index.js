@@ -40,16 +40,28 @@ function broadcast(data) {
 }
 
 app.get('/api/data', (req, res) => {
-  const db = readDb()
-  res.json(db)
+  try {
+    const db = readDb()
+    console.log('GET /api/data - returning data:', db)
+    res.json(db)
+  } catch (error) {
+    console.error('Error in GET /api/data:', error)
+    res.status(500).json({ error: 'Failed to read data', details: error.message })
+  }
 })
 
 app.put('/api/data', (req, res) => {
-  const incoming = req.body
-  const updated = { data: incoming, updatedAt: Date.now() }
-  writeDb(updated)
-  broadcast(incoming) // Real-time update to all clients
-  res.json(updated)
+  try {
+    const incoming = req.body
+    const updated = { data: incoming, updatedAt: Date.now() }
+    writeDb(updated)
+    broadcast(incoming) // Real-time update to all clients
+    console.log('PUT /api/data - updated data:', incoming)
+    res.json(updated)
+  } catch (error) {
+    console.error('Error in PUT /api/data:', error)
+    res.status(500).json({ error: 'Failed to save data', details: error.message })
+  }
 })
 
 // WebSocket connection handling
@@ -69,13 +81,36 @@ wss.on('connection', (ws) => {
 
 // Serve React app for all routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'))
+  const indexPath = path.join(__dirname, 'dist', 'index.html')
+  console.log('Serving React app from:', indexPath)
+  res.sendFile(indexPath)
 })
 
 const PORT = process.env.PORT || 3000
+
+// Check if dist folder exists
+const distPath = path.join(__dirname, 'dist')
+if (!fs.existsSync(distPath)) {
+  console.error('ERROR: dist folder not found at:', distPath)
+  console.error('Please run: npm run build')
+  process.exit(1)
+}
+
+// Check if dist/index.html exists
+const indexPath = path.join(distPath, 'index.html')
+if (!fs.existsSync(indexPath)) {
+  console.error('ERROR: dist/index.html not found at:', indexPath)
+  console.error('Please run: npm run build')
+  process.exit(1)
+}
+
+console.log('✅ dist folder found at:', distPath)
+console.log('✅ index.html found at:', indexPath)
+
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server listening on http://0.0.0.0:${PORT}`)
-  console.log(`WebSocket server ready for real-time updates`)
+  console.log(`🚀 Server listening on http://0.0.0.0:${PORT}`)
+  console.log(`🔌 WebSocket server ready for real-time updates`)
+  console.log(`📁 Serving static files from: ${distPath}`)
 })
 
 
