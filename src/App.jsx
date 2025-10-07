@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { DataContext, defaultData } from './DataContext.js'
 import DisplayPage from './pages/DisplayPage.jsx'
@@ -15,6 +15,8 @@ export default function App() {
       return defaultData
     }
   })
+  const isApplyingRemoteUpdate = useRef(false)
+  const [isApiReady, setIsApiReady] = useState(false)
 
   // Persistuj do localStorage při změně dat
   useEffect(() => {
@@ -39,6 +41,86 @@ export default function App() {
       }
     }
   }, [data])
+
+  // Načti data z API při startu (a inicializuj, pokud prázdné)
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await fetch('/api/data')
+        if (!res.ok) throw new Error('Failed to fetch /api/data')
+        const payload = await res.json()
+        if (cancelled) return
+        if (payload && payload.data) {
+          isApplyingRemoteUpdate.current = true
+          setData(payload.data)
+        } else {
+          // Inicializuj vzdálené úložiště aktuálními (lokálními) daty
+          await fetch('/api/data', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          })
+        }
+        setIsApiReady(true)
+      } catch (e) {
+        console.warn('API not reachable, working from localStorage only.', e)
+        setIsApiReady(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Odesílej změny do API (vynech při aplikaci vzdálené aktualizace)
+  useEffect(() => {
+    if (!isApiReady) return
+    if (isApplyingRemoteUpdate.current) {
+      isApplyingRemoteUpdate.current = false
+      return
+    }
+    const controller = new AbortController()
+    const send = async () => {
+      try {
+        await fetch('/api/data', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          signal: controller.signal,
+        })
+      } catch (e) {
+        if (e.name !== 'AbortError') console.warn('Failed to PUT /api/data', e)
+      }
+    }
+    send()
+    return () => controller.abort()
+  }, [data, isApiReady])
+
+  // Pravidelné dotazování API pro změny z jiných zařízení
+  useEffect(() => {
+    if (!isApiReady) return
+    let cancelled = false
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/data', { cache: 'no-store' })
+        if (!res.ok) return
+        const payload = await res.json()
+        if (cancelled) return
+        if (payload && payload.data) {
+          const localStr = JSON.stringify(data)
+          const remoteStr = JSON.stringify(payload.data)
+          if (localStr !== remoteStr) {
+            isApplyingRemoteUpdate.current = true
+            setData(payload.data)
+          }
+        }
+      } catch (e) {
+        // silently ignore during polling
+      }
+    }, 5000) // 5s
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [data, isApiReady])
 
   // Naslouchej změnám v localStorage pro real-time aktualizace mezi záložkami
   useEffect(() => {
