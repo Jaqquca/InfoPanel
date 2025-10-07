@@ -6,11 +6,10 @@ export default defineConfig({
   server: {
     host: true, // bind to 0.0.0.0 for LAN access
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5174',
-        changeOrigin: true,
-      },
-    },
+    // No proxy needed in production - everything runs on single server
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
   },
 })
