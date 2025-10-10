@@ -6,7 +6,16 @@ export default defineConfig({
   server: {
     host: true, // bind to 0.0.0.0 for LAN access
     port: 5173,
-    // No proxy needed in production - everything runs on single server
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/ws': {
+        target: 'ws://localhost:3000',
+        ws: true,
+      }
+    }
   },
   build: {
     outDir: 'dist',
