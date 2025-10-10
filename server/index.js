@@ -20,8 +20,15 @@ const DB_PATH = path.join(__dirname, 'db.json')
 function readDb() {
   try {
     const raw = fs.readFileSync(DB_PATH, 'utf8')
-    return JSON.parse(raw)
-  } catch {
+    console.log('Reading db.json from:', DB_PATH)
+    console.log('Raw content:', raw)
+    const parsed = JSON.parse(raw)
+    console.log('Parsed successfully:', parsed)
+    return parsed
+  } catch (error) {
+    console.error('Error reading db.json:', error.message)
+    console.error('DB_PATH:', DB_PATH)
+    console.error('File exists?', fs.existsSync(DB_PATH))
     return { data: null, updatedAt: 0 }
   }
 }
