@@ -7,13 +7,11 @@ export default defineConfig({
     host: true, // bind to 0.0.0.0 for LAN access
     port: 5173,
     proxy: {
+      // Proxy API requests to Express backend
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
-      },
-      '/ws': {
-        target: 'ws://localhost:3000',
-        ws: true,
+        ws: true, // Also proxy WebSocket connections for this path
       }
     }
   },
