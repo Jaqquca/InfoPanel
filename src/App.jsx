@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { DataContext, defaultData } from './DataContext.js'
 import DisplayPage from './pages/DisplayPage.jsx'
@@ -9,27 +9,57 @@ export default function App() {
   const [data, setData] = useState(defaultData)
   const isApplyingRemoteUpdate = useRef(false)
   const [isApiReady, setIsApiReady] = useState(false)
+  const saveDebounceTimer = useRef(null)
 
-  // Persistuj do localStorage při změně dat
+  // Debounced localStorage save - waits 1 second after user stops typing
   useEffect(() => {
-    try {
-      const dataString = JSON.stringify(data)
-      const dataSize = new Blob([dataString]).size
-      const maxSize = 5 * 1024 * 1024 // 5MB limit
-      
-      if (dataSize > maxSize) {
-        console.warn(`Data size (${Math.round(dataSize / 1024)}KB) is approaching localStorage limit. Consider using smaller images.`)
+    // Skip debouncing for remote updates
+    if (isApplyingRemoteUpdate.current) {
+      try {
+        const dataString = JSON.stringify(data)
+        localStorage.setItem("roomPanelData", dataString)
+        window.dispatchEvent(new CustomEvent('roomPanelDataChanged', { 
+          detail: data 
+        }))
+      } catch (error) {
+        console.warn("Chyba při ukládání do localStorage:", error)
       }
-      
-      localStorage.setItem("roomPanelData", dataString)
-      // Vyvolej custom event pro real-time aktualizace v rámci stejné záložky
-      window.dispatchEvent(new CustomEvent('roomPanelDataChanged', { 
-        detail: data 
-      }))
-    } catch (error) {
-      console.warn("Chyba při ukládání do localStorage:", error)
-      if (error.name === 'QuotaExceededError') {
-        alert('Storage limit exceeded. Please use smaller images or remove some backgrounds.')
+      return
+    }
+
+    // Clear existing timer
+    if (saveDebounceTimer.current) {
+      clearTimeout(saveDebounceTimer.current)
+    }
+
+    // Set new timer for debounced save
+    saveDebounceTimer.current = setTimeout(() => {
+      try {
+        const dataString = JSON.stringify(data)
+        const dataSize = new Blob([dataString]).size
+        const maxSize = 5 * 1024 * 1024 // 5MB limit
+        
+        if (dataSize > maxSize) {
+          console.warn(`Data size (${Math.round(dataSize / 1024)}KB) is approaching localStorage limit. Consider using smaller images.`)
+        }
+        
+        localStorage.setItem("roomPanelData", dataString)
+        // Vyvolej custom event pro real-time aktualizace v rámci stejné záložky
+        window.dispatchEvent(new CustomEvent('roomPanelDataChanged', { 
+          detail: data 
+        }))
+      } catch (error) {
+        console.warn("Chyba při ukládání do localStorage:", error)
+        if (error.name === 'QuotaExceededError') {
+          alert('Storage limit exceeded. Please use smaller images or remove some backgrounds.')
+        }
+      }
+    }, 500)
+
+    // Cleanup on unmount
+    return () => {
+      if (saveDebounceTimer.current) {
+        clearTimeout(saveDebounceTimer.current)
       }
     }
   }, [data])
@@ -76,28 +106,44 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Odesílej změny do API (vynech při aplikaci vzdálené aktualizace)
+  // Debounced API save - waits 1 second after user stops typing
+  const apiDebounceTimer = useRef(null)
   useEffect(() => {
     if (!isApiReady) return
     if (isApplyingRemoteUpdate.current) {
       isApplyingRemoteUpdate.current = false
       return
     }
-    const controller = new AbortController()
-    const send = async () => {
-      try {
-        await fetch('/api/data', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-          signal: controller.signal,
-        })
-      } catch (e) {
-        if (e.name !== 'AbortError') console.warn('Failed to PUT /api/data', e)
-      }
+
+    // Clear existing timer
+    if (apiDebounceTimer.current) {
+      clearTimeout(apiDebounceTimer.current)
     }
-    send()
-    return () => controller.abort()
+
+    // Set new timer for debounced API call
+    const controller = new AbortController()
+    apiDebounceTimer.current = setTimeout(() => {
+      const send = async () => {
+        try {
+          await fetch('/api/data', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+            signal: controller.signal,
+          })
+        } catch (e) {
+          if (e.name !== 'AbortError') console.warn('Failed to PUT /api/data', e)
+        }
+      }
+      send()
+    }, 500)
+
+    return () => {
+      if (apiDebounceTimer.current) {
+        clearTimeout(apiDebounceTimer.current)
+      }
+      controller.abort()
+    }
   }, [data, isApiReady])
 
   // WebSocket connection for real-time updates
