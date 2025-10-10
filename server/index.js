@@ -79,8 +79,8 @@ wss.on('connection', (ws) => {
   })
 })
 
-// Serve React app for all routes
-app.get('*', (req, res) => {
+// Serve React app for all routes (catch-all for SPA routing)
+app.get('/*', (req, res) => {
   const indexPath = path.join(__dirname, 'dist', 'index.html')
   console.log('Serving React app from:', indexPath)
   res.sendFile(indexPath)
