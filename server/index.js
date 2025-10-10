@@ -13,7 +13,7 @@ const server = createServer(app)
 const wss = new WebSocketServer({ server })
 
 app.use(express.json({ limit: '10mb' }))
-app.use(express.static('dist'))
+app.use(express.static(path.join(__dirname, '..', 'dist')))
 
 const DB_PATH = path.join(__dirname, 'db.json')
 
@@ -81,7 +81,7 @@ wss.on('connection', (ws) => {
 
 // Serve React app for all routes (catch-all for SPA routing)
 app.get('/*', (req, res) => {
-  const indexPath = path.join(__dirname, 'dist', 'index.html')
+  const indexPath = path.join(__dirname, '..', 'dist', 'index.html')
   console.log('Serving React app from:', indexPath)
   res.sendFile(indexPath)
 })
@@ -89,7 +89,7 @@ app.get('/*', (req, res) => {
 const PORT = process.env.PORT || 3000
 
 // Check if dist folder exists
-const distPath = path.join(__dirname, 'dist')
+const distPath = path.join(__dirname, '..', 'dist')
 if (!fs.existsSync(distPath)) {
   console.error('ERROR: dist folder not found at:', distPath)
   console.error('Please run: npm run build')
