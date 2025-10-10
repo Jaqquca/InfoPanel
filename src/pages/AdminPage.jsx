@@ -386,45 +386,30 @@ export default function AdminPage() {
       <div className="admin-form">
         <h3>Stav semaforu</h3>
         <div className="status-group">
-          <label>
-            <input
-              type="radio"
-              name="status"
-              value="green"
-              checked={data.status === 'green'}
-              onChange={handleStatusChange}
-            />
-            <span className="status-option">
-              <span className="status-dot green"></span>
-              Zelená
-            </span>
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="status"
-              value="red"
-              checked={data.status === 'red'}
-              onChange={handleStatusChange}
-            />
-            <span className="status-option">
-              <span className="status-dot red"></span>
-              Červená
-            </span>
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="status"
-              value="orange"
-              checked={data.status === 'orange'}
-              onChange={handleStatusChange}
-            />
-            <span className="status-option">
-              <span className="status-dot orange"></span>
-              Oranžová
-            </span>
-          </label>
+          <button
+            type="button"
+            className={`status-button ${data.status === 'green' ? 'active' : ''}`}
+            onClick={() => setData(prev => ({ ...prev, status: 'green' }))}
+          >
+            <span className="status-dot green"></span>
+            <span className="status-label">Zelená</span>
+          </button>
+          <button
+            type="button"
+            className={`status-button ${data.status === 'red' ? 'active' : ''}`}
+            onClick={() => setData(prev => ({ ...prev, status: 'red' }))}
+          >
+            <span className="status-dot red"></span>
+            <span className="status-label">Červená</span>
+          </button>
+          <button
+            type="button"
+            className={`status-button ${data.status === 'orange' ? 'active' : ''}`}
+            onClick={() => setData(prev => ({ ...prev, status: 'orange' }))}
+          >
+            <span className="status-dot orange"></span>
+            <span className="status-label">Oranžová</span>
+          </button>
         </div>
         <p><strong>Aktuální stav:</strong> 
           <span className={`status-indicator ${data.status}`}></span>

@@ -110,10 +110,17 @@ export default function DisplayPage() {
         }}
       ></div>
       <header className="top">
-        <h1 className="room-name">{data?.roomName ?? 'Místnost'}</h1>
-        <p className="room-meta">
-          {data?.personName ?? '—'} — {data?.roomType ?? '—'}
-        </p>
+        <div className="header-left">
+          <h1 className="room-name">{data?.roomName ?? 'Místnost'}</h1>
+          <p className="room-meta">
+            {data?.personName ?? '—'} — {data?.roomType ?? '—'}
+          </p>
+        </div>
+        <div className="header-status">
+          {statusClass === 'red' && 'NEVSTUPOVAT'}
+          {statusClass === 'orange' && 'ZANEPRÁZDNĚNO'}
+          {statusClass === 'green' && 'VOLNO'}
+        </div>
       </header>
 
       <main 
